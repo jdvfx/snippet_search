@@ -1,31 +1,21 @@
-/*
-   --------------------
-   Houdini VEX snippets
-   --------------------
-*/
-// -----------------------------------------------------------------
 // pop rotate orient using v
 vector up = {0,1,0};
 vector axis = cross(up,normalize(v@v));
 vector4 rot = quaternion(radians(ch('rotation_speed')*length(v@v)),axis);
 p@orient = qmultiply(p@orient, rot);
-
 // -----------------------------------------------------------------
 // random orient
 vector axis = normalize(rand(@P*39409)*vector(2)-1);
 p@orient = quaternion(axis);
-
 // -----------------------------------------------------------------
 // rotate vel around axis
 float angle = radians(ch("angle"));
 vector axis = chv("axis");
 v@v = qrotate(quaternion(angle, axis),v@v);
-
 // -----------------------------------------------------------------
 // orient to N and up 
 v@up = qrotate(p@orient, {0,1,0});
 v@N = qrotate(p@orient, {0,0,1});
-
 // -----------------------------------------------------------------
 // 4D CurlX noise with FBM octaves
 vector4 P4;
@@ -47,7 +37,6 @@ for(int i=0; i<chi("octaves"); i++){
 }
 
 @Cd=(c/maxval)*chf("mult");
-
 // -----------------------------------------------------------------
 // filter by size (max axis) when using packed primitives
 vector b = primintrinsic(0,"bounds",@primnum);
@@ -65,22 +54,17 @@ foreach (int pt; n){
 }
 avgN /= len(n)+1;
 v@N = avgN;
-
-
 // -----------------------------------------------------------------
 // rainbow XYZ
 vector bmin,bmax;
 getbbox(0,bmin,bmax);
 @Cd=fit(@P,bmin,bmax,0,1);
-
 // -----------------------------------------------------------------
 // onoise 3D 
 vector n3 =onoise (@P*chf("n3_freq")+chv("n3_offset"),chi("n3_turb"),ch("n3_rough"),ch("n3_atten"))*vector(chf("n3_amp"));
-
 // -----------------------------------------------------------------
 // onpoise 1D
 float n1 =onoise (@P*chf("n1_freq")+chv("n1_offset"),chi("n1_turb"),ch("n1_rough"),ch("n1_atten"))*chf("n1_amp");
-
 // -----------------------------------------------------------------
 // transform geo with extractTransform as input 2
 vector pivot=point(1,"pivot",0);
@@ -93,7 +77,6 @@ matrix3 m = qconvert(p@orient);
 @P*=m;
 @P+=pivot;
 @P+=p-pivot;
-
 // -----------------------------------------------------------------
 // cull points outside/inside bounds 
 vector bmin,bmax;
@@ -103,7 +86,6 @@ if(@P.x<bmin.x || @P.x>bmax.x || @P.y<bmin.y || @P.y>bmax.y || @P.z<bmin.z || @P
 }else{
     removepoint(0,@ptnum);
 }
-
 // -----------------------------------------------------------------
 // ramp from point proximity
 int handle = pcopen(1,"P",@P,chf("radius"),chi("maxpoints"));
@@ -113,7 +95,6 @@ if(pcnumfound(handle)>0){
     d = fit(distance(@P,p),0,chf("radius"),1,0);
 }
 @Cd=d+{0,0,1};
-
 // -----------------------------------------------------------------
 // random color from name attribute
 // run on primitives or points
@@ -132,7 +113,6 @@ for(int i=0;i<n_;i++){
 }
 i@nameindex=x;
 @Cd=rand(x);
-
 // -----------------------------------------------------------------
 // minimun colour of neighbour points 
 int n[] = neighbours(0, @ptnum);
@@ -141,7 +121,6 @@ foreach (int pt; n){
     Cd = min(Cd,point(0, "Cd", pt));
 }
 @Cd = Cd;
-
 // -----------------------------------------------------------------
 // vex "carve" SOP (run over primitives)
 // keep all the points and slide them along curve
@@ -156,7 +135,6 @@ foreach(int pt; pts)
     vector pos = primuv(0, "P", prim, uv);
     setpointattrib(0, "P", pt, pos);
 }
-
 // -----------------------------------------------------------------
 // v@N and v@up to p@orient
 vector Xaxis = normalize(v@N);
@@ -165,7 +143,6 @@ vector Zaxis = cross(Xaxis,Yaxis);
 vector center = v@P;
 matrix myTransform = set(Xaxis,Yaxis,Zaxis,center);
 p@orient = quaternion(matrix3(myTransform));
-
 // -----------------------------------------------------------------
 // vel along curve
 if(@ptnum>0){
@@ -173,7 +150,6 @@ if(@ptnum>0){
 }else{
     v@v = point(0,"P",@ptnum+1)-@P;
 }
-
 // -----------------------------------------------------------------
 // keep first or last points on the curves (run over primitives)
 int p[] = primpoints(0,@primnum);
@@ -184,7 +160,6 @@ foreach (int num; p) {
         if(num!=p[len(p)-1])removepoint(0,num,1);
     }
 }
-
 // -----------------------------------------------------------------
 // keep first and last points on the curves (run over primitives)
 int p[] = primpoints(0,@primnum);
@@ -369,7 +344,6 @@ if(length(v)>0){
     }
     f@density = dsum /float(chi("steps"));
 }
-
 // -----------------------------------------------------------------
 // 3d fbm noise - for vel
 #include 
@@ -378,7 +352,6 @@ vector n1p = vop_fbmNoiseVV(@P*chf("noise1Pos_Freq")+chv("noise1Pos_Offset"),chf
 vector n1 = vop_fbmNoiseVV(n1p*chf("noise1_Freq")+chv("noise1_Offset"),chf("noise1_Roughness"),chi("noise1_Turbulence"),"noise");
 // noise 2
 v@vel = n1;
-
 // -----------------------------------------------------------------
 // remap density with premult/power/postmult (unclamped with efit)
 f@density = efit(pow(efit(f@density,0,chf("max_density"),0,1),chf("exp")),0,1,0,chf("out_density"));
@@ -419,7 +392,6 @@ v@rotation = extracted;
 s@filename = primintrinsic(1, "filename", @ptnum);
 
 @scale = scale;
-
 // -----------------------------------------------------------------
 // point clustering
 int handle = pcopen(0,"P",@P,chf("radius"),chi("maxpoints"));
@@ -441,7 +413,6 @@ if(pcnumfound(handle)>0){
         }
     }
 }
-
 // -----------------------------------------------------------------
 // volume camera cull
 vector pndc = toNDC(chs("camera_name"), @P);
@@ -450,7 +421,6 @@ float pad = chf("padding");
 if(pndc.x< 0-pad || pndc.x>1+pad || pndc.y< 0-pad || pndc.y>1+pad || pndc.z>=0 ){
     f@density=0;    
 }
-
 // -----------------------------------------------------------------
 // bunker bullet auto freeze
 if(length(@v)< chf("min_vel")){
@@ -473,7 +443,6 @@ if(distance(@P,v@oldP)< chf("min_dist")){
 }
 // stash P
 v@oldP = @P;
-
 // -----------------------------------------------------------------
 // connect adjacent pieces using @id
 void line(vector pos1,pos2){
@@ -503,7 +472,6 @@ if(neighbourcount(0,@ptnum)==0){
     // collapse lines into points (centroids)
     @P = (@P+point(0,"P",neighbour(0,@ptnum,0)))*0.5;
 }
-
 // -----------------------------------------------------------------
 // vorticity
 // input 2 has vel.* volumes
@@ -512,7 +480,6 @@ vector dy = volumegradient(1,"vel.y",@P);
 vector dz = volumegradient(1,"vel.z",@P);
 vector w = set(dz.y-dy.z,dx.z-dz.x,dy.x-dx.y);
 @Cd = fit(length(w),0,chf("max_vorticity"),0,1)+{0,0,1};
-
 // -----------------------------------------------------------------
 // fade volume edges (bounds)
 vector bmin,bmax;
@@ -520,7 +487,6 @@ getbbox(0,bmin,bmax);
 float o = chf("padding");
 float d = fit(@P.x,bmin.x,bmin.x+o,0,1)*fit(@P.x,bmax.x,bmax.x-o,0,1)*fit(@P.y,bmin.y,bmin.y+o,0,1)*fit(@P.y,bmax.y,bmax.y-o,0,1)*fit(@P.z,bmin.z,bmin.z+o,0,1)*fit(@P.z,bmax.z,bmax.z-o,0,1);
 @density *= d;
-
 // -----------------------------------------------------------------
 // SOP ambient occlusion
 // code from: Labs calculate occlusion
@@ -546,6 +512,3 @@ for (int i = 0; i<rays; i++ ) {
 
 float occ = clamp(vop_bias(1.0-(tempOcc / rays), bias), 0, 1);
 @Cd=occ;
-
-
-

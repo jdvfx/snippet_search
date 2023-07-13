@@ -24,6 +24,8 @@ class TextSearch:
             else:
                 snippets.append(snip_lines)
                 snip_lines = ""
+        if len(snip_lines)>0:
+            snippets.append(snip_lines)
         return snippets
     # ----------------------------------------------------------
     """ fuzzy search in snippet lines, return list of snippets """

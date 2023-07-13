@@ -30,17 +30,22 @@ class TextSearch:
     def search(self,search_string) -> List[Tuple[float,str]]:
         search_results = []
         for snippet in self.snippets:
-            alpha = re.sub('[^a-za-z]+', ' ', snippet) # alpha only
-            words_ = alpha.split(' ')
-            words_ = [x for x in words_ if x != ''] # remove empty elements
-            words = list(set(words_)) # remove duplicates
+            if search_string in snippet:
+                ratio = 2.0
+                result:Tuple[float,str] = (ratio,snippet)
+                search_results.append(result)
+            else:
+                alpha = re.sub('[^a-za-z]+', ' ', snippet) # alpha only
+                words_ = alpha.split(' ')
+                words_ = [x for x in words_ if x != ''] # remove empty elements
+                words = list(set(words_)) # remove duplicates
 
-            for word in words:
-                ratio:float = difflib.SequenceMatcher(None,search_string,word).ratio()
-                if ratio>0.5:
-                    result:Tuple[float,str] = (ratio,snippet)
-                    search_results.append(result)
-                    break
+                for word in words:
+                    ratio:float = difflib.SequenceMatcher(None,search_string,word).ratio()
+                    if ratio>0.8:
+                        result:Tuple[float,str] = (ratio,snippet)
+                        search_results.append(result)
+                        break
         #
         search_results.sort(reverse=True)
         return search_results

@@ -44,7 +44,6 @@ float sx = b[1]-b[0];
 float sy = b[3]-b[2];
 float sz = b[5]-b[4];
 if(max(max(sx,sy),sz)<chf("max_axis"))removeprim(0,@primnum,1);
-
 // -----------------------------------------------------------------
 // Average Neighbouring Normals
 int n[] = neighbours(0, @ptnum);
@@ -166,7 +165,6 @@ int p[] = primpoints(0,@primnum);
 foreach (int num; p) {   
     if(num!=p[0] && num!=p[len(p)-1])removepoint(0,num,1);  
 }
-
 // -----------------------------------------------------------------
 // ramp from distance to points
 int handle = pcopen(1,"P",@P,chf("radius"),1);
@@ -176,12 +174,10 @@ if(pcnumfound(handle)>0){
     d = fit(distance(@P,p),0,chf("radius"),1,0);
 }
 @Cd=pow(d,chf("exp"))+{0,0,1};
-
 // -----------------------------------------------------------------
 // remove prims with less than 3 points
 int pts[] = primpoints( 0, @primnum );
 if( len(pts) < 3 ) removeprim( 0, @primnum, 1 );
-
 // -----------------------------------------------------------------
 // ramp from distance to surface 
 int prim;
@@ -192,7 +188,6 @@ float d = xyzdist(1,@P,prim,uv,dmax);
 float f = fit(d,dmin,dmax,0,1);
 if(chi("reverse_direction")==1)f=fit01(f,1,0);
 @Cd = f + {0,0,1};
-
 // -----------------------------------------------------------------
 // delete by proximity to surface (run over points)
 int prim;
@@ -207,14 +202,12 @@ if(chi("invert_selection")==1){
         removepoint(0,@ptnum);
     }
 }
-
 // -----------------------------------------------------------------
 // create u attribute along one curve (run over points)
 f@u = float(i@ptnum)/float(npoints(0));
 if(chi("display_u")==1){
 	@Cd=f@u+{0,0,1}; 
 }
-
 // -----------------------------------------------------------------
 // create u attribute along curves (run over primitives)
 int p[] = primpoints(0,@primnum);
@@ -229,11 +222,9 @@ for(int i=0;i<l;i++){
         setpointattrib(0,"Cd",p[i],c,"set");    
     }
 }
-
 // -----------------------------------------------------------------
 // keep point in proximity
 if(pcnumfound(pcopen(1,"P",@P,chf("radius"),1))==0)removepoint(0,@ptnum,1);
-
 // -----------------------------------------------------------------
 // velocity along one curve (run over points)
 if(@ptnum>0){
@@ -242,7 +233,6 @@ if(@ptnum>0){
     v@v = point(0,"P",@ptnum+1)-@P;
 }
 if(chi("reverse_direction")==1)v@v*=-1;
-
 // -----------------------------------------------------------------
 // vel along multiple curves (run over primitives)
 int p[] = primpoints(0,@primnum);
@@ -255,7 +245,6 @@ for(int i=0;i<len(p);i++)  {
     }
     setpointattrib(0,"v",p[i],v,"set");
 }
-
 // -----------------------------------------------------------------
 // clouds noise
 #include < voplib.h>
@@ -278,7 +267,6 @@ vector n2p = vop_fbmNoiseVV(@P*chf("n2_pn_Freq")+chv("n2_pn_Offset"),chf("n2_pn_
 vector n2 = vop_fbmNoiseVV(n2p*chf("n2_Freq")+chv("n2_Offset"),chf("n2_rough"),chi("n2_turb"),"noise");
 // sample displaced density
 @density = volumesample(0,0,@P+(n1*chf("n1_mult")+n2*chf("n2_mult"))*mask*d*chf("advection_length"));
-
 // -----------------------------------------------------------------
 // vex rotate quaternion
 matrix3 m;
@@ -287,7 +275,6 @@ m = qconvert(@orient);
 vector axis = {0,1,0};
 rotate(m, radians(180), axis);    
 @orient = quaternion(m);
-
 // -----------------------------------------------------------------
 // intersection of 2 bounds
 vector m1,M1,m2,M2;
@@ -300,7 +287,6 @@ if(m2.x>M1.x || M2.x< m1.x || m2.y>M1.y || M2.y< m1.y || m2.z>M1.z || M2.z< m1.z
     @P.y=min(M1.y,max(@P.y,m2.y),M2.y);
     @P.z=min(M1.z,max(@P.z,m2.z),M2.z);
 }
-
 // -----------------------------------------------------------------
 // divscale disturbance
 // 
@@ -329,7 +315,6 @@ if(@density< chf("max_density")){
         }
     }   
 }
-
 // -----------------------------------------------------------------
 // volume motion blur using vel from second input (not VDB)
 float vx=volumesample(1,0,@P);
@@ -355,11 +340,9 @@ v@vel = n1;
 // -----------------------------------------------------------------
 // remap density with premult/power/postmult (unclamped with efit)
 f@density = efit(pow(efit(f@density,0,chf("max_density"),0,1),chf("exp")),0,1,0,chf("out_density"));
-
 // -----------------------------------------------------------------
 // mask
 @density =  clamp(pow(anoise(@P*chf("mask_freq")+chv("mask_offset"), chi("mask_turbulence"), chf("mask_roughness"), chf("mask_attenuation")),chf("mask_exp"))*chf("mask_mult"),0,1);
-
 /*
 	EXTRACTING TRANSFORMS
 	Depending on the value of c,
@@ -378,7 +361,6 @@ vector p = @P; //pivot for crack/extracting transforms
 vector translate = cracktransform(trs, xyz, 0 , p, xform);
 vector rotate    = cracktransform(trs, xyz, 1 , p, xform);
 vector scale    = cracktransform(trs, xyz, 2 , p, xform);
-
 // -----------------------------------------------------------------
 //MAKE TRANSFORM
 matrix newTrans = maketransform(trs, xyz, translate, rotate,{1,1,1});
@@ -485,8 +467,10 @@ vector w = set(dz.y-dy.z,dx.z-dz.x,dy.x-dx.y);
 vector bmin,bmax;
 getbbox(0,bmin,bmax);
 float o = chf("padding");
-float d = fit(@P.x,bmin.x,bmin.x+o,0,1)*fit(@P.x,bmax.x,bmax.x-o,0,1)*fit(@P.y,bmin.y,bmin.y+o,0,1)*fit(@P.y,bmax.y,bmax.y-o,0,1)*fit(@P.z,bmin.z,bmin.z+o,0,1)*fit(@P.z,bmax.z,bmax.z-o,0,1);
-@density *= d;
+float x = fit(@P.x,bmin.x,bmin.x+o,0,1)*fit(@P.x,bmax.x,bmax.x-o,0,1);
+float y = fit(@P.y,bmin.y,bmin.y+o,0,1)*fit(@P.y,bmax.y,bmax.y-o,0,1);
+float z = fit(@P.z,bmin.z,bmin.z+o,0,1)*fit(@P.z,bmax.z,bmax.z-o,0,1);
+@density *= x*y*z;
 // -----------------------------------------------------------------
 // SOP ambient occlusion
 // code from: Labs calculate occlusion
